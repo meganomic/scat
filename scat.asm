@@ -4,7 +4,7 @@ BITS 64
 ; ELF64 Header
 ehdr:
                 db 0x7F, "ELF", 2, 1, 1, 0 ; e_ident[16]
-    times 8     db 0 ;
+                dq 0 ;
                 dw 2 ; e_type
                 dw 62 ; e_machine
                 dd 1 ; e_version
@@ -12,14 +12,15 @@ ehdr:
                 dq phdr - $$; e_phoff   /* Program header table file offset */
                 dq 0 ; e_shoff          /* Section header table file offset */
                 dd 0 ; e_flags
-                dw ehdrsize ; e_ehsize
-                dw phdrsize ; e_phentsize;
+                dw 64 ; e_ehsize
+                dw 56 ; e_phentsize;
                 dw 1 ; e_phnum;
                 dw 0 ; e_shentsize;
-                dw 0 ; e_shnum;
-                dw 0 ; e_shstrndx;
+                db 0
+                ;dw 0 ; e_shnum;
+                ;dw 0 ; e_shstrndx;
 
-ehdrsize equ $-ehdr ; 64 bytes
+;ehdrsize equ $-ehdr ; 64 bytes
 
 
 phdr:
@@ -32,7 +33,7 @@ phdr:
                 dq end_of_file-_start ; p_memsz       /* Segment size in memory */
                 dq 4096 ; p_align                     /* Segment alignment, file & memory */
 
-phdrsize equ $-phdr ; 56
+;phdrsize equ $-phdr ; 56
 
 
 
