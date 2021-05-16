@@ -1,2 +1,2 @@
-# scat
-A Simple Cat program written in assembly
+# Simple Cat(scat)
+A simple `cat` program written in assembly
