@@ -93,7 +93,6 @@ _start:
 read_loop:
     xor rax, rax ; sys_read
     mov rdi, r15 ; fd
-    mov rsi, r14 ; buffer pointer
     mov rdx, 65535 ; count
     syscall
 
@@ -104,7 +103,6 @@ read_loop:
     mov rdx, rax ; amount of bytes read
     mov rax, 1 ; sys_write
     mov rdi, 1 ; stdout
-    mov rsi, r14 ; buffer pointer
     syscall
 
     test rax, rax
