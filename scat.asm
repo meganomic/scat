@@ -67,7 +67,7 @@ _start:
     mov al, 9 ; sys_mmap - This is safe because al only has fd in it, which is small
     xor rdi, rdi ; addr
     mov si, 65535 ; size - This is safe because rsi is zero
-    mov dl, 1 | 2 ; PROT_READ | PROT_WRITE - This is safe because rdl is zero
+    mov dl, 1 | 2 ; PROT_READ | PROT_WRITE - This is safe because rdi is zero
     mov r10b, 2 | 0x20 ; MAP_PRIVATE | MAP_ANONYMOUS - This is safe because r10 is zero
     syscall
 
