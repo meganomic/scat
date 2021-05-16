@@ -40,7 +40,7 @@ phdrsize equ $-phdr ; 56
 %macro check_error 2+
     j%-1 %%no_error
     mov rsi, %%str ; pointer
-    mov rdx, %%no_error-%%str ; length
+    mov dx, %%no_error-%%str ; length
     jmp exit_print_error
     %%str: db  %2
     %%no_error:
