@@ -100,7 +100,7 @@ read_loop:
     test rax, rax
     check_error s, `Can't read file\n`
 
-    mov r12, rax
+    mov r12, rax ; Save the amount of bytes that was read
 
     ; write syscall
     mov rax, 1 ; sys_write
@@ -115,18 +115,16 @@ read_loop:
     sub r13, r12
     jnz read_loop
 
-    xor rdi, rdi
+    xor rdi, rdi ; Set exit code to 0
 exit:
-    ; Terminate program
     mov rax, 60 ; sys_exit
-    ;xor rdi, rdi ; error code = 0
     syscall
 
 exit_print_error:
     mov rax, 1 ; sys_write
     mov rdi, 2 ; stderr
     syscall
-    dec rdi
+    dec rdi ; Set exit code to 1
     jmp exit
 
 
