@@ -63,8 +63,6 @@ _start:
     mov r15, rax ; Save fd
 
 
-
-
     ; Allocate some memory
     mov rax, 9 ; sys_mmap
     xor rdi, rdi ; addr
@@ -76,8 +74,6 @@ _start:
     test rax, rax
     check_error s, `Can't allocate memory!\n`
 
-    mov r14, rax ; Save pointer to memory for later
-
     ; Fstat call to get file size
     mov rsi, rax ; pointer
     mov rax, 5 ; sys_fstat
@@ -87,8 +83,8 @@ _start:
     test rax, rax
     check_error s, `fstat call failed!\n`
 
+    mov r13, [rsi+48] ; load file size
 
-    mov r13, [r14+48] ; load file size
 
 read_loop:
     xor rax, rax ; sys_read
