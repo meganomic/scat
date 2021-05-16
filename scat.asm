@@ -65,7 +65,7 @@ _start:
 
 
 
-    ; Memory for fstat call
+    ; Allocate some memory
     mov rax, 9 ; sys_mmap
     xor rdi, rdi ; addr
     mov rsi, 65535 ; size
@@ -74,9 +74,9 @@ _start:
     syscall
 
     test rax, rax
-    check_error s, `Can't allocate memory for fstat call!\n`
+    check_error s, `Can't allocate memory!\n`
 
-    mov r14, rax ; pointer to fstat struct
+    mov r14, rax ; Save pointer to memory for later
 
     ; Fstat call to get file size
     mov rsi, rax ; pointer
@@ -91,7 +91,6 @@ _start:
     mov r13, [r14+48] ; load file size
 
 read_loop:
-
     xor rax, rax ; sys_read
     mov rdi, r15 ; fd
     mov rsi, r14 ; buffer pointer
