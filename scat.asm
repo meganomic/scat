@@ -129,4 +129,3 @@ exit_print_error:
 
 
 end_of_file:
-    filesize equ $-$$
