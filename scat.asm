@@ -68,7 +68,7 @@ _start:
     ; Memory for fstat call
     mov rax, 9 ; sys_mmap
     xor rdi, rdi ; addr
-    mov rsi, 65536 ; size
+    mov rsi, 65535 ; size
     mov rdx, 1 | 2 ; PROT_READ | PROT_WRITE
     mov r10, 2 | 0x20 ; MAP_PRIVATE | MAP_ANONYMOUS
     syscall
@@ -95,7 +95,7 @@ read_loop:
     xor rax, rax ; sys_read
     mov rdi, r15 ; fd
     mov rsi, r14 ; buffer pointer
-    mov rdx, 65536 ; count
+    mov rdx, 65535 ; count
     syscall
 
     test rax, rax
