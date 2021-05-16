@@ -59,7 +59,7 @@ _start:
     mov rdi, [rsp+16] ; file path
     syscall
 
-    test rax, rax
+    test eax, eax
     check_error s, `Can't open file!\n`
 
     mov bl, al ; Save fd - fd won't be above 255. I'll eat my shoes if it is
@@ -73,7 +73,7 @@ _start:
     mov r10b, 2 | 0x20 ; MAP_PRIVATE | MAP_ANONYMOUS - This is safe because r10 is zero
     syscall
 
-    test rax, rax
+    test eax, eax
     check_error s, `Can't allocate memory!\n`
 
     ; Fstat call to get file size
@@ -82,19 +82,19 @@ _start:
     mov edi, ebx ; fd - This is safe because rdi is zero
     syscall
 
-    test rax, rax
+    test eax, eax
     check_error s, `fstat call failed!\n`
 
     mov r13, [rsi+48] ; load file size
 
 
 read_loop:
-    xor rax, rax ; sys_read
+    xor eax, eax ; sys_read
     mov dil, bl ; fd - Again safe because rdi never stores a number higher than 255
     mov dx, 65535 ; count - Safe because this is the highest number ever stored in rdx
     syscall
 
-    test rax, rax
+    test eax, eax
     check_error s, `Can't read file\n`
 
     ; write syscall
@@ -103,7 +103,7 @@ read_loop:
     mov dil, 1 ; stdout - Safe because only small number in rdi
     syscall
 
-    test rax, rax
+    test eax, eax
     js short exit ; No point trying to print an error message if the write call fails lol
 
     sub r13, rdx
