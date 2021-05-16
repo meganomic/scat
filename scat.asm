@@ -110,28 +110,25 @@ read_loop:
     syscall
 
     test rax, rax
-    js exit_error ; No point trying to print an error message if the write call fails lol
+    js exit ; No point trying to print an error message if the write call fails lol
 
     sub r13, r12
     jnz read_loop
 
+    xor rdi, rdi
+exit:
     ; Terminate program
     mov rax, 60 ; sys_exit
-    xor rdi, rdi ; error code = 0
+    ;xor rdi, rdi ; error code = 0
     syscall
-
-
 
 exit_print_error:
     mov rax, 1 ; sys_write
     mov rdi, 2 ; stderr
     syscall
+    dec rdi
+    jmp exit
 
-exit_error:
-    ; Terminate program with error code
-    mov rax, 60 ; sys_exit
-    mov rdi, 1 ; error code = 1
-    syscall
 
 end_of_file:
     filesize equ $-$$
