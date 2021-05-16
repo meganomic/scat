@@ -60,15 +60,15 @@ _start:
     test rax, rax
     check_error s, `Can't open file!\n`
 
-    mov r15, rax ; Save fd
+    mov bl, al ; Save fd - fd won't be above 255. I'll eat my shoes if it is
 
 
     ; Allocate some memory
-    mov rax, 9 ; sys_mmap
+    mov al, 9 ; sys_mmap - This is safe because al only has fd in it, which is small
     xor rdi, rdi ; addr
-    mov rsi, 65535 ; size
-    mov rdx, 1 | 2 ; PROT_READ | PROT_WRITE
-    mov r10, 2 | 0x20 ; MAP_PRIVATE | MAP_ANONYMOUS
+    mov si, 65535 ; size - This is safe because rsi is zero
+    mov dl, 1 | 2 ; PROT_READ | PROT_WRITE - This is safe because rdl is zero
+    mov r10b, 2 | 0x20 ; MAP_PRIVATE | MAP_ANONYMOUS - This is safe because r10 is zero
     syscall
 
     test rax, rax
@@ -77,7 +77,7 @@ _start:
     ; Fstat call to get file size
     mov rsi, rax ; pointer
     mov rax, 5 ; sys_fstat
-    mov rdi, r15 ; fd
+    mov dil, bl ; fd - This is safe because rdi is zero
     syscall
 
     test rax, rax
@@ -88,8 +88,8 @@ _start:
 
 read_loop:
     xor rax, rax ; sys_read
-    mov rdi, r15 ; fd
-    mov rdx, 65535 ; count
+    mov dil, bl ; fd - Again safe because rdi never stores a number higher than 255
+    mov dx, 65535 ; count - Safe because this is the highest number ever stored in rdx
     syscall
 
     test rax, rax
@@ -98,7 +98,7 @@ read_loop:
     ; write syscall
     mov rdx, rax ; amount of bytes read
     mov rax, 1 ; sys_write
-    mov rdi, 1 ; stdout
+    mov dil, 1 ; stdout - Safe because only small number in rdi
     syscall
 
     test rax, rax
