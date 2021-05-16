@@ -1,4 +1,5 @@
 BITS 64
+default rel
     org 0x08048000
 
 ; ELF64 Header
@@ -39,7 +40,7 @@ phdr:
 
 
 %macro check_error 2+
-    j%-1 %%no_error
+    j%-1 short %%no_error
     mov rsi, %%str ; pointer
     mov dx, %%no_error-%%str ; length
     jmp exit_print_error
@@ -51,7 +52,7 @@ _start:
     ; Check that there is exactly 1 command line argument.
     ; It's comparing against 2 because the first one is always the program itself
     mov rax, [rsp]
-    cmp rax, 2
+    cmp al, 2
     check_error ne, `Usage: scat [filename]\n`
 
     ; Open file
@@ -77,8 +78,8 @@ _start:
 
     ; Fstat call to get file size
     mov rsi, rax ; pointer
-    mov rax, 5 ; sys_fstat
-    mov dil, bl ; fd - This is safe because rdi is zero
+    mov eax, 5 ; sys_fstat
+    mov edi, ebx ; fd - This is safe because rdi is zero
     syscall
 
     test rax, rax
@@ -103,22 +104,22 @@ read_loop:
     syscall
 
     test rax, rax
-    js exit ; No point trying to print an error message if the write call fails lol
+    js short exit ; No point trying to print an error message if the write call fails lol
 
     sub r13, rdx
-    jnz read_loop
+    jnz short read_loop
 
     xor rdi, rdi ; Set exit code to 0
 exit:
-    mov rax, 60 ; sys_exit
+    mov eax, 60 ; sys_exit
     syscall
 
 exit_print_error:
-    mov rax, 1 ; sys_write
-    mov rdi, 2 ; stderr
+    mov eax, 1 ; sys_write
+    mov edi, 2 ; stderr
     syscall
-    dec rdi ; Set exit code to 1
-    jmp exit
+    dec edi ; Set exit code to 1
+    jmp short exit
 
 
 end_of_file:
