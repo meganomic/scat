@@ -8,9 +8,9 @@ ehdr:
                 dw 2 ; e_type
                 dw 62 ; e_machine
                 dd 1 ; e_version
-                dq _start; e_entry /* Entry point virtual address */
-                dq phdr - $$; e_phoff /* Program header table file offset */
-                dq 0 ; e_shoff /* Section header table file offset */
+                dq _start; e_entry      /* Entry point virtual address */
+                dq phdr - $$; e_phoff   /* Program header table file offset */
+                dq 0 ; e_shoff          /* Section header table file offset */
                 dd 0 ; e_flags
                 dw ehdrsize ; e_ehsize
                 dw phdrsize ; e_phentsize;
@@ -25,12 +25,12 @@ ehdrsize equ $-ehdr ; 64 bytes
 phdr:
                 dd 1 ; p_type;
                 dd 7 ; p_flags;
-                dq 0 ; p_offset;           /* Segment file offset */
-                dq $$ ; p_vaddr;           /* Segment virtual address */
-                dq 0 ; p_paddr;           /* Segment physical address */
-                dq end_of_file-_start ; p_filesz;         /* Segment size in file */
-                dq end_of_file-_start ; p_memsz;          /* Segment size in memory */
-                dq 4096 ; p_align;          /* Segment alignment, file & memory */
+                dq 0 ; p_offset;                      /* Segment file offset */
+                dq $$ ; p_vaddr;                      /* Segment virtual address */
+                dq 0 ; p_paddr;                       /* Segment physical address */
+                dq end_of_file-_start ; p_filesz      /* Segment size in file */
+                dq end_of_file-_start ; p_memsz       /* Segment size in memory */
+                dq 4096 ; p_align                     /* Segment alignment, file & memory */
 
 phdrsize equ $-phdr ; 56
 
@@ -92,9 +92,9 @@ _start:
 
 read_loop:
 
-    mov rax, 0 ; sys_read
+    xor rax, rax ; sys_read
     mov rdi, r15 ; fd
-    mov rsi, r14 ; buffer
+    mov rsi, r14 ; buffer pointer
     mov rdx, 65536 ; count
     syscall
 
@@ -106,8 +106,8 @@ read_loop:
     ; write syscall
     mov rax, 1 ; sys_write
     mov rdi, 1 ; stdout
-    mov rsi, r14 ; buffer
-    mov rdx, r12 ; sys_write
+    mov rsi, r14 ; buffer pointer
+    mov rdx, r12 ; count
     syscall
 
     test rax, rax
