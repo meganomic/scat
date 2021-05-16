@@ -100,19 +100,17 @@ read_loop:
     test rax, rax
     check_error s, `Can't read file\n`
 
-    mov r12, rax ; Save the amount of bytes that was read
-
     ; write syscall
+    mov rdx, rax ; amount of bytes read
     mov rax, 1 ; sys_write
     mov rdi, 1 ; stdout
     mov rsi, r14 ; buffer pointer
-    mov rdx, r12 ; count
     syscall
 
     test rax, rax
     js exit ; No point trying to print an error message if the write call fails lol
 
-    sub r13, r12
+    sub r13, rdx
     jnz read_loop
 
     xor rdi, rdi ; Set exit code to 0
