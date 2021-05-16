@@ -24,7 +24,7 @@ ehdrsize equ $-ehdr ; 64 bytes
 
 phdr:
                 dd 1 ; p_type;
-                dd 7 ; p_flags;
+                dd 5 ; p_flags;
                 dq 0 ; p_offset;                      /* Segment file offset */
                 dq $$ ; p_vaddr;                      /* Segment virtual address */
                 dq 0 ; p_paddr;                       /* Segment physical address */
@@ -96,8 +96,8 @@ read_loop:
     check_error s, `Can't read file\n`
 
     ; write syscall
-    mov rdx, rax ; amount of bytes read
-    mov rax, 1 ; sys_write
+    mov dx, ax ; amount of bytes read - Safe because rdx contains a number equal or lower than 65535
+    mov ax, 1 ; sys_write - Safe because rax contains a number equal or lower than 65535
     mov dil, 1 ; stdout - Safe because only small number in rdi
     syscall
 
