@@ -7,4 +7,4 @@ From this you get a 64bit linux binary
 
 ### F.A.Q
 Q: Why is it called Small Cat?  
-A: Because it's 427 bytes. And because it's funny.
+A: Because it's 420 bytes. And because it's funny.
