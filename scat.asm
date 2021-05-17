@@ -17,9 +17,9 @@ ehdr:
                 dw 56 ; e_phentsize;
                 dw 1 ; e_phnum;
                 dw 0 ; e_shentsize;
-                db 0
-                ;dw 0 ; e_shnum;
-                ;dw 0 ; e_shstrndx;
+                ;db 0
+                dw 0 ; e_shnum;
+                dw 0 ; e_shstrndx;
 
 ;ehdrsize equ $-ehdr ; 64 bytes
 
@@ -41,7 +41,7 @@ phdr:
 
 %macro check_error 2+
     j%-1 short %%no_error
-    mov rsi, %%str ; pointer
+    lea rsi, %%str ; pointer
     mov dx, %%no_error-%%str ; length
     jmp exit_print_error
     %%str: db  %2
@@ -83,7 +83,7 @@ _start:
     syscall
 
     test eax, eax
-    check_error s, `fstat call failed!\n`
+    check_error s, `Can't get filesize!\n`
 
     mov r13, [rsi+48] ; load file size
 
@@ -95,7 +95,7 @@ read_loop:
     syscall
 
     test eax, eax
-    check_error s, `Can't read file\n`
+    check_error s, `Can't read file!\n`
 
     ; write syscall
     mov dx, ax ; amount of bytes read - Safe because rdx contains a number equal or lower than 65535
@@ -115,10 +115,11 @@ exit:
     syscall
 
 exit_print_error:
+    mov rbx, rax ; save error code
     mov eax, 1 ; sys_write
     mov edi, 2 ; stderr
     syscall
-    dec edi ; Set exit code to 1
+    mov edi, ebx ; set error code
     jmp short exit
 
 
