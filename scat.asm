@@ -73,7 +73,7 @@ _start:
     mov r10b, 2 | 0x20 ; MAP_PRIVATE | MAP_ANONYMOUS - This is safe because r10 is zero
     syscall
 
-    test eax, eax
+    test rax, rax
     check_error s, `Can't allocate memory!\n`
 
     ; Fstat call to get file size
@@ -115,7 +115,7 @@ exit:
     syscall
 
 exit_print_error:
-    mov rbx, rax ; save error code
+    mov ebx, eax ; save error code
     mov eax, 1 ; sys_write
     mov edi, 2 ; stderr
     syscall
