@@ -62,19 +62,18 @@ fstat:
 
     ; Fstat call to get file size
     lea esi, buffer
-    add al, 2 ; sys_fstat - This works because eax contains the FD 3. Probably :D
+    mov al, 5 ; sys_fstat
     mov edi, ebx ; fd - This is safe because it resets upper bits
     syscall
 
     test eax, eax
-    jns short skip
+    jns short no_error
     lea esi, str3
     mov dl, 20
     jmp_indirect_exit: jmp short exit_print_error
     str3: db `Can't get filesize!\n`
-    skip:
-    ;check_error s, `Can't get filesize!\n`
 
+no_error:
     mov r13, [rsi+48] ; load file size
 
 
@@ -107,7 +106,7 @@ write:
     sub r13, rdx
     jnz short read_loop
 
-    xor rdi, rdi ; Set exit code to 0
+    xor edi, edi ; Set exit code to 0
 exit:
     mov eax, 60 ; sys_exit
     syscall
