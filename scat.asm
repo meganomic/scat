@@ -7,18 +7,23 @@ ehdr:
                 db 0x7F, "ELF", 2, 1, 1;, 0 ; e_ident[16]
                 ;dq 0 ;
 _start:
-    mov eax, [rsp]
-    cmp al, 2
-    je short open_file
-    jmp short perr
-                ;db 0 ; Filler byte
+    mov eax, [rsp] ; 3 bytes
+    cmp al, 2 ; 2 bytes
+    je short openfile ; 2 bytes
+    jmp short perr ; 2 bytes
                 dw 2 ; e_type
                 dw 62 ; e_machine
                 dd 1 ; e_version
                 dq _start; e_entry      /* Entry point virtual address */
                 dq phdr - $$; e_phoff   /* Program header table file offset */
-                dq 0 ; e_shoff          /* Section header table file offset */
-                dd 0 ; e_flags
+openfile:
+    mov rdi, [rsp+16] ; 5 bytes
+    syscall ; 2 bytes
+    test eax, eax ; 2 bytes
+    jmp short openfile_continue ; 2 bytes
+                db 0 ; filler byte
+                ;dq 0 ; e_shoff          /* Section header table file offset */
+                ;dd 0 ; e_flags
                 dw 64 ; e_ehsize
                 dw 56 ; e_phentsize;
                 ;dw 1 ; e_phnum;
@@ -33,8 +38,8 @@ phdr:
                 dq 0 ; p_offset;                      /* Segment file offset */
                 dq $$ ; p_vaddr;                      /* Segment virtual address */
 perr:
-                lea esi, str1
-                jmp short err
+    lea esi, str1 ; 6 bytes
+    jmp short err ; 2 bytes
                 ;dq 0 ; p_paddr;                       /* Segment physical address */
                 dq end_of_code-$$ ; p_filesz          /* Segment size in file */
                 dq end_of_bss-$$ ; p_memsz               /* Segment size in memory */
@@ -54,12 +59,13 @@ err:
     str1: db `Usage: scat [filename]\n`
 
 
-open_file:
-    ; rax is already 2 here. 2 == sys_
-    mov rdi, [rsp+16] ; file path
-    syscall
 
-    test eax, eax
+    ; rax is already 2 here. 2 == sys_
+    ;mov rdi, [rsp+16] ; file path
+    ;syscall
+
+    ;test eax, eax
+openfile_continue:
     jns short fstat
     lea esi, str2
     mov dl, 17
