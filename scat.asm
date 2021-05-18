@@ -33,62 +33,76 @@ phdr:
                 dq 4096 ; p_align                     /* Segment alignment, file & memory */
 
 
-
-%macro check_error 2+
-    j%-1 short %%no_error
-    lea rsi, %%str ; pointer
-    mov dx, %%no_error-%%str ; length
-    jmp exit_print_error
-    %%str: db  %2
-    %%no_error:
-%endmacro
-
 _start:
     ; Check that there is exactly 1 command line argument.
     ; It's comparing against 2 because the first one is always the program itself
-    mov rax, [rsp]
+    mov eax, [rsp]
     cmp al, 2
-    check_error ne, `Usage: scat [filename]\n`
+    je short open_file
+    lea esi, str1
+    mov dl, 23
+    jmp short jmp_indirect_exit
+    str1: db `Usage: scat [filename]\n`
 
-    ; Open file
+
+open_file:
+    ; rax is already 2 here. 2 == sys_
     mov rdi, [rsp+16] ; file path
     syscall
 
     test eax, eax
-    check_error s, `Can't open file!\n`
+    jns short fstat
+    lea esi, str2
+    mov dl, 17
+    jmp short jmp_indirect_exit
+    str2: db `Can't open file!\n`
 
+fstat:
     mov bl, al ; Save fd - fd won't be above 255. I'll eat my shoes if it is
 
-
     ; Fstat call to get file size
-    lea rsi, buffer
-    mov eax, 5 ; sys_fstat
-    mov edi, ebx ; fd - This is safe because rdi is zero
+    lea esi, buffer
+    add al, 2 ; sys_fstat - This works because eax contains the FD 3. Probably :D
+    mov edi, ebx ; fd - This is safe because it resets upper bits
     syscall
 
     test eax, eax
-    check_error s, `Can't get filesize!\n`
+    jns short skip
+    lea esi, str3
+    mov dl, 20
+    jmp_indirect_exit: jmp short exit_print_error
+    str3: db `Can't get filesize!\n`
+    skip:
+    ;check_error s, `Can't get filesize!\n`
 
     mov r13, [rsi+48] ; load file size
 
 
 read_loop:
-    xor eax, eax ; sys_read
+    ; rax is already zero here
     mov dil, bl ; fd - Again safe because rdi never stores a number higher than 255
     mov dx, 65535 ; count - Safe because this is the highest number ever stored in rdx
     syscall
 
     test eax, eax
-    check_error s, `Can't read file!\n`
+    jns short write
+    lea esi, str4
+    mov dl, 17
+    jmp short exit_print_error
+    str4: db `Can't read file!\n`
 
+
+write:
     ; write syscall
-    mov dx, ax ; amount of bytes read - Safe because rdx contains a number equal or lower than 65535
+    xchg edx, eax ; amount of bytes read - Safe because rdx contains a number equal or lower than 65535
     mov ax, 1 ; sys_write - Safe because rax contains a number equal or lower than 65535
     mov dil, 1 ; stdout - Safe because only small number in rdi
     syscall
 
     test eax, eax
     js short exit ; No point trying to print an error message if the write call fails lol
+
+    xor eax, eax ; sys_read
 
     sub r13, rdx
     jnz short read_loop
@@ -99,13 +113,12 @@ exit:
     syscall
 
 exit_print_error:
-    mov ebx, eax ; save error code
+    xchg ebx, eax ; save error code
     mov eax, 1 ; sys_write
     mov edi, 2 ; stderr
     syscall
-    mov edi, ebx ; set error code
+    xchg edi, ebx ; set error code
     jmp short exit
-
 
 end_of_code:
 
