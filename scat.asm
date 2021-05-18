@@ -1,11 +1,16 @@
 BITS 64
 default rel
-    org 0x08048000
+    org 0x08048000 ; default virtual address
 
 ; ELF64 Header
 ehdr:
                 db 0x7F, "ELF", 2, 1, 1, 0 ; e_ident[16]
-                dq 0 ;
+                ;dq 0 ;
+_start:
+    mov eax, [rsp]
+    cmp al, 2
+    jmp short continue
+                db 0 ; Filler byte
                 dw 2 ; e_type
                 dw 62 ; e_machine
                 dd 1 ; e_version
@@ -15,11 +20,10 @@ ehdr:
                 dd 0 ; e_flags
                 dw 64 ; e_ehsize
                 dw 56 ; e_phentsize;
-                dw 1 ; e_phnum;
-                dw 0 ; e_shentsize;
-                ;db 0
-                dw 0 ; e_shnum;
-                dw 0 ; e_shstrndx;
+                ;dw 1 ; e_phnum;
+                ;dw 0 ; e_shentsize;
+                ;dw 0 ; e_shnum;
+                ;dw 0 ; e_shstrndx;
 
 
 phdr:
@@ -33,11 +37,11 @@ phdr:
                 dq 4096 ; p_align                     /* Segment alignment, file & memory */
 
 
-_start:
+continue:
     ; Check that there is exactly 1 command line argument.
     ; It's comparing against 2 because the first one is always the program itself
-    mov eax, [rsp]
-    cmp al, 2
+    ;mov eax, [rsp]
+    ;cmp al, 2
     je short open_file
     lea esi, str1
     mov dl, 23
