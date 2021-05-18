@@ -1,5 +1,5 @@
 # Small Cat (scat)
-A small (340 bytes) `cat` program written in assembly for my amusement
+A small (339 bytes) `cat` program written in assembly for my amusement
 
 ### Build instructions
 nasm -f bin scat.asm  
