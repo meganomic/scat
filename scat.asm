@@ -87,7 +87,7 @@ read_loop:
     test eax, eax
     jns short write
     lea esi, str4
-    mov dl, 17
+    mov dx, 17
     jmp short exit_print_error
     str4: db `Can't read file!\n`
 
