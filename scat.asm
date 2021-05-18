@@ -28,8 +28,8 @@ phdr:
                 dq 0 ; p_offset;                      /* Segment file offset */
                 dq $$ ; p_vaddr;                      /* Segment virtual address */
                 dq 0 ; p_paddr;                       /* Segment physical address */
-                dq end_of_file-$$ ; p_filesz          /* Segment size in file */
-                dq bss_end-$$ ; p_memsz               /* Segment size in memory */
+                dq end_of_code-$$ ; p_filesz          /* Segment size in file */
+                dq end_of_bss-$$ ; p_memsz               /* Segment size in memory */
                 dq 4096 ; p_align                     /* Segment alignment, file & memory */
 
 
@@ -107,11 +107,9 @@ exit_print_error:
     jmp short exit
 
 
-end_of_file:
-
-bss:
+end_of_code:
 
 section .bss
 buffer: resb 65535
 
-bss_end:
+end_of_bss:
