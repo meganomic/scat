@@ -21,21 +21,16 @@ ehdr:
                 dw 0 ; e_shnum;
                 dw 0 ; e_shstrndx;
 
-;ehdrsize equ $-ehdr ; 64 bytes
-
 
 phdr:
                 dd 1 ; p_type;
-                dd 5 ; p_flags;
+                dd 7 ; p_flags;
                 dq 0 ; p_offset;                      /* Segment file offset */
                 dq $$ ; p_vaddr;                      /* Segment virtual address */
                 dq 0 ; p_paddr;                       /* Segment physical address */
-                dq end_of_file-_start ; p_filesz      /* Segment size in file */
-                dq end_of_file-_start ; p_memsz       /* Segment size in memory */
+                dq end_of_file-$$ ; p_filesz          /* Segment size in file */
+                dq bss_end-$$ ; p_memsz               /* Segment size in memory */
                 dq 4096 ; p_align                     /* Segment alignment, file & memory */
-
-;phdrsize equ $-phdr ; 56
-
 
 
 
@@ -65,19 +60,8 @@ _start:
     mov bl, al ; Save fd - fd won't be above 255. I'll eat my shoes if it is
 
 
-    ; Allocate some memory
-    mov al, 9 ; sys_mmap - This is safe because al only has fd in it, which is small
-    xor rdi, rdi ; addr
-    mov si, 65535 ; size - This is safe because rsi is zero
-    mov dl, 1 | 2 ; PROT_READ | PROT_WRITE - This is safe because rdx is zero
-    mov r10b, 2 | 0x20 ; MAP_PRIVATE | MAP_ANONYMOUS - This is safe because r10 is zero
-    syscall
-
-    test rax, rax
-    check_error s, `Can't allocate memory!\n`
-
     ; Fstat call to get file size
-    mov rsi, rax ; pointer
+    lea rsi, buffer
     mov eax, 5 ; sys_fstat
     mov edi, ebx ; fd - This is safe because rdi is zero
     syscall
@@ -124,3 +108,10 @@ exit_print_error:
 
 
 end_of_file:
+
+bss:
+
+section .bss
+buffer: resb 65535
+
+bss_end:
