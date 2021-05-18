@@ -4,13 +4,14 @@ default rel
 
 ; ELF64 Header
 ehdr:
-                db 0x7F, "ELF", 2, 1, 1, 0 ; e_ident[16]
+                db 0x7F, "ELF", 2, 1, 1;, 0 ; e_ident[16]
                 ;dq 0 ;
 _start:
     mov eax, [rsp]
     cmp al, 2
-    jmp short continue
-                db 0 ; Filler byte
+    je short open_file
+    jmp short perr
+                ;db 0 ; Filler byte
                 dw 2 ; e_type
                 dw 62 ; e_machine
                 dd 1 ; e_version
@@ -31,19 +32,23 @@ phdr:
                 dd 7 ; p_flags;
                 dq 0 ; p_offset;                      /* Segment file offset */
                 dq $$ ; p_vaddr;                      /* Segment virtual address */
-                dq 0 ; p_paddr;                       /* Segment physical address */
+perr:
+                lea esi, str1
+                jmp short err
+                ;dq 0 ; p_paddr;                       /* Segment physical address */
                 dq end_of_code-$$ ; p_filesz          /* Segment size in file */
                 dq end_of_bss-$$ ; p_memsz               /* Segment size in memory */
                 dq 4096 ; p_align                     /* Segment alignment, file & memory */
 
 
-continue:
+
     ; Check that there is exactly 1 command line argument.
     ; It's comparing against 2 because the first one is always the program itself
     ;mov eax, [rsp]
     ;cmp al, 2
-    je short open_file
-    lea esi, str1
+    ;je short open_file
+    ;lea esi, str1
+err:
     mov dl, 23
     jmp short jmp_indirect_exit
     str1: db `Usage: scat [filename]\n`
