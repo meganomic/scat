@@ -38,26 +38,23 @@ phdr:
                 dq 0 ; p_offset;                      /* Segment file offset */
                 dq $$ ; p_vaddr;                      /* Segment virtual address */
 perr:
-    push str1
-    pop rsp
-    jmp short err ; 2 bytes
+    push str1 ; 5 bytes
+    pop rsp ; 1 byte
+    jmp short indirect_err_jmp ; 2 bytes
                 ;dq 0 ; p_paddr;                       /* Segment physical address */
                 dq end_of_code-$$ ; p_filesz          /* Segment size in file */
                 dq end_of_bss-$$ ; p_memsz               /* Segment size in memory */
                 dq 4096 ; p_align                     /* Segment alignment, file & memory */
 
 
-err:
-    jmp short exit_print_error
-    str1: db `scat [filename] \n`
-
-
 openfile_continue:
+    ; Put address to error string in rsp
     push estr
     pop rsp
 
     mov [rsp+8], byte 50 ; Set syscall number in error string
 
+indirect_err_jmp:
     js short exit_print_error
 
 
@@ -75,8 +72,6 @@ fstat:
     test eax, eax
     js short exit_print_error
 
-
-no_error:
     mov r13, [rsi+48] ; load file size
 
 
@@ -116,13 +111,16 @@ exit_print_error:
     xchg ebx, eax ; save error code
     mov eax, 1 ; sys_write
     mov edi, 2 ; stderr
-    mov dx, 17
-    mov rsi, rsp
+    mov dx, 17 ; length of string
+    mov esi, esp ; error string pointer
     syscall
     xchg edi, ebx ; set error code
     jmp short exit
 
-estr: db `SYSCALL x failed\n`
+    ; Some strings
+    estr: db `SYSCALL x failed\n`
+    str1: db `scat [filename] \n`
+
 end_of_code:
 
 section .bss
