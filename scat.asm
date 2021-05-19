@@ -109,15 +109,15 @@ exit_print_error:
     xchg ebx, eax ; save error code
     mov eax, 1 ; sys_write
     mov edi, 2 ; stderr
-    mov dx, 17 ; length of string
+    mov dx, 16 ; length of string
     mov esi, esp ; error string pointer
     syscall
     xchg edi, ebx ; set error code
     jmp short exit
 
     ; Some strings
-    estr: db `SYSCALL x failed\n`
-    str1: db `scat [filename] \n`
+    estr: db `SYSCALL x error\n`
+    str1: db `scat [filename]\n`
 
 end_of_code:
 
