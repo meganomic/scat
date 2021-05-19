@@ -38,7 +38,8 @@ phdr:
                 dq 0 ; p_offset;                      /* Segment file offset */
                 dq $$ ; p_vaddr;                      /* Segment virtual address */
 perr:
-    lea esi, str1 ; 6 bytes
+    push str1
+    pop rsp
     jmp short err ; 2 bytes
                 ;dq 0 ; p_paddr;                       /* Segment physical address */
                 dq end_of_code-$$ ; p_filesz          /* Segment size in file */
@@ -46,34 +47,24 @@ perr:
                 dq 4096 ; p_align                     /* Segment alignment, file & memory */
 
 
-
-    ; Check that there is exactly 1 command line argument.
-    ; It's comparing against 2 because the first one is always the program itself
-    ;mov eax, [rsp]
-    ;cmp al, 2
-    ;je short open_file
-    ;lea esi, str1
 err:
-    mov dl, 23
-    jmp short jmp_indirect_exit
-    str1: db `Usage: scat [filename]\n`
+    jmp short exit_print_error
+    str1: db `scat [filename] \n`
 
 
-
-    ; rax is already 2 here. 2 == sys_
-    ;mov rdi, [rsp+16] ; file path
-    ;syscall
-
-    ;test eax, eax
 openfile_continue:
-    jns short fstat
-    lea esi, str2
-    mov dl, 17
-    jmp short jmp_indirect_exit
-    str2: db `Can't open file!\n`
+    push estr
+    pop rsp
+
+    mov [rsp+8], byte 50 ; Set syscall number in error string
+
+    js short exit_print_error
+
 
 fstat:
     mov bl, al ; Save fd - fd won't be above 255. I'll eat my shoes if it is
+
+    mov [rsp+8], byte 53 ; Set syscall number in error string
 
     ; Fstat call to get file size
     lea esi, buffer
@@ -82,11 +73,8 @@ fstat:
     syscall
 
     test eax, eax
-    jns short no_error
-    lea esi, str3
-    mov dl, 20
-    jmp_indirect_exit: jmp short exit_print_error
-    str3: db `Can't get filesize!\n`
+    js short exit_print_error
+
 
 no_error:
     mov r13, [rsi+48] ; load file size
@@ -97,13 +85,10 @@ read_loop:
     mov dil, bl ; fd - Again safe because rdi never stores a number higher than 255
     mov dx, 65535 ; count - Safe because this is the highest number ever stored in rdx
     syscall
+    mov [rsp+8], byte 48 ; Set syscall number in error string
 
     test eax, eax
-    jns short write
-    lea esi, str4
-    mov dx, 17
-    jmp short exit_print_error
-    str4: db `Can't read file!\n`
+    js short exit_print_error
 
 
 write:
@@ -122,6 +107,7 @@ write:
     jnz short read_loop
 
     xor edi, edi ; Set exit code to 0
+
 exit:
     mov eax, 60 ; sys_exit
     syscall
@@ -130,10 +116,13 @@ exit_print_error:
     xchg ebx, eax ; save error code
     mov eax, 1 ; sys_write
     mov edi, 2 ; stderr
+    mov dx, 17
+    mov rsi, rsp
     syscall
     xchg edi, ebx ; set error code
     jmp short exit
 
+estr: db `SYSCALL x failed\n`
 end_of_code:
 
 section .bss
