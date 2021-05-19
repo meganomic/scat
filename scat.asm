@@ -38,8 +38,7 @@ phdr:
                 dq 0 ; p_offset;                      /* Segment file offset */
                 dq $$ ; p_vaddr;                      /* Segment virtual address */
 perr:
-    push str1 ; 5 bytes
-    pop rsp ; 1 byte
+    lea esp, str1
     jmp short indirect_err_jmp ; 2 bytes
                 ;dq 0 ; p_paddr;                       /* Segment physical address */
                 dq end_of_code-$$ ; p_filesz          /* Segment size in file */
@@ -49,8 +48,7 @@ perr:
 
 openfile_continue:
     ; Put address to error string in rsp
-    push estr
-    pop rsp
+    lea esp, estr
 
     mov [rsp+8], byte 50 ; Set syscall number in error string
 
