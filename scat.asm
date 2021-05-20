@@ -65,7 +65,7 @@ openfile_continue:
 
 
 fstat:
-    mov bl, al ; Save fd - fd won't be above 255. I'll eat my shoes if it is
+    xchg ebx, eax ; Save fd - fd won't be above 255. I'll eat my shoes if it is
 
     mov [rsp+8], byte 53 ; Set syscall number in error string
 
