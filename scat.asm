@@ -7,6 +7,9 @@ ehdr:
                 db 0x7F, "ELF", 2, 1, 1;, 0 ; e_ident[16]
                 ;dq 0 ;
 _start:
+    ; This is where the program starts
+    ; Compare Argc against 2, the first argv is the path to the binary
+    ; So 2 means the program was given 1 argument
     mov eax, [rsp] ; 3 bytes
     cmp al, 2 ; 2 bytes
     je short openfile ; 2 bytes
@@ -17,6 +20,8 @@ _start:
                 dq _start; e_entry      /* Entry point virtual address */
                 dq phdr - $$; e_phoff   /* Program header table file offset */
 openfile:
+    ; Load the pointer to the 1st 'real' argument aka the filepath into rdi and open it
+    ; rax is already 2 here which is sys_open
     mov rdi, [rsp+16] ; 5 bytes
     syscall ; 2 bytes
     test eax, eax ; 2 bytes
@@ -38,6 +43,7 @@ phdr:
                 dq 0 ; p_offset;                      /* Segment file offset */
                 dq $$ ; p_vaddr;                      /* Segment virtual address */
 perr:
+    ; Load the 'usage' error message pointer and jump to indirectly to exit_print_error
     lea esp, str1
     jmp short indirect_err_jmp ; 2 bytes
                 ;dq 0 ; p_paddr;                       /* Segment physical address */
@@ -74,7 +80,7 @@ fstat:
 
 
 read_loop:
-    ; rax is already zero here
+    ; rax is already zero here which is sys_read
     mov dil, bl ; fd - Again safe because rdi never stores a number higher than 255
     mov dx, 65535 ; count - Safe because this is the highest number ever stored in rdx
     syscall
