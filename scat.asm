@@ -120,7 +120,7 @@ exit_print_error:
     mov dx, 16 ; length of string
     mov esi, esp ; error string pointer
     syscall
-    xchg edi, ebx ; set error code
+    mov edi, ebx ; set error code
     jmp short exit
 
     ; Some strings
