@@ -14,6 +14,7 @@ _start:
     cmp al, 2 ; 2 bytes
     je short openfile ; 2 bytes
     jmp short perr ; 2 bytes
+
                 dw 2 ; e_type
                 dw 62 ; e_machine
                 dd 1 ; e_version
@@ -26,6 +27,7 @@ openfile:
     syscall ; 2 bytes
     test eax, eax ; 2 bytes
     jmp short openfile_continue ; 2 bytes
+
                 db 0 ; filler byte
                 ;dq 0 ; e_shoff          /* Section header table file offset */
                 ;dd 0 ; e_flags
@@ -43,9 +45,10 @@ phdr:
                 dq 0 ; p_offset;                      /* Segment file offset */
                 dq $$ ; p_vaddr;                      /* Segment virtual address */
 perr:
-    ; Load the 'usage' error message pointer and jump to indirectly to exit_print_error
-    lea esp, str1
-    jmp short indirect_err_jmp ; 2 bytes
+    ; Load the 'usage' error message pointer
+    lea esp, str1 ; 6 bytes
+    jmp short exit_print_error ; 2 bytes
+
                 ;dq 0 ; p_paddr;                       /* Segment physical address */
                 dq end_of_code-$$ ; p_filesz          /* Segment size in file */
                 dq end_of_bss-$$ ; p_memsz               /* Segment size in memory */
@@ -58,7 +61,6 @@ openfile_continue:
 
     mov [rsp+8], byte 50 ; Set syscall number in error string
 
-indirect_err_jmp:
     js short exit_print_error
 
 
