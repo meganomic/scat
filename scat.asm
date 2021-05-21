@@ -10,7 +10,7 @@ _start:
     ; This is where the program starts
     ; Compare Argc against 2, the first argv is the path to the binary
     ; So 2 means the program was given 1 argument
-    pop rax
+    pop rax ; 1 byte
     cmp al, 2 ; 2 bytes
     je short openfile ; 2 bytes
     jmp short perr ; 2 bytes
@@ -28,10 +28,10 @@ openfile:
     pop rdi ; 1 byte - pointer to the path to the file to open
     syscall ; 2 bytes
     test eax, eax ; 2 bytes
-    push estr
+    push estr ; 5 bytes - Put address to error string on stack
     jmp short openfile_continue ; 2 bytes
 
-                db 0 ; filler byter
+                db 0 ; filler byte
                 ;dd 0
                 ;dq 0 ; e_shoff          /* Section header table file offset */
                 ;dd 0 ; e_flags
@@ -50,7 +50,7 @@ phdr:
                 dq 0 ; p_offset;                      /* Segment file offset */
                 dq $$ ; p_vaddr;                      /* Segment virtual address */
 perr:
-    ; Load the 'usage' error message pointer
+    ; Put 'usage' error message pointer on stack
     push str1 ; 5 bytes
     jmp short exit ; 2 bytes
 
@@ -62,10 +62,6 @@ perr:
 
 
 openfile_continue:
-    ; Put address to error string in rsp
-    ;mov esp, estr
-    ;push estr
-
     mov cl, 50 ; Set syscall number for error string
 
     js short exit
