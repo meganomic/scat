@@ -47,7 +47,7 @@ phdr:
 perr:
     ; Load the 'usage' error message pointer
     mov esp, str1 ; 5 bytes
-    jmp short exit_print_error ; 2 bytes
+    jmp short exit ; 2 bytes
 
                 db 0 ; filler byte
                 ;dq 0 ; p_paddr;                       /* Segment physical address */
@@ -62,7 +62,7 @@ openfile_continue:
 
     mov [rsp+8], byte 50 ; Set syscall number in error string
 
-    js short exit_print_error
+    js short exit
 
 
 fstat:
@@ -77,7 +77,7 @@ fstat:
     syscall
 
     test eax, eax
-    js short exit_print_error
+    js short exit
 
     mov r13, [rsi+48] ; load file size
 
@@ -90,7 +90,7 @@ read_loop:
     mov [rsp+8], byte 48 ; Set syscall number in error string
 
     test eax, eax
-    js short exit_print_error
+    js short exit
 
 
 write:
@@ -101,28 +101,28 @@ write:
     syscall
 
     test eax, eax
-    js short exit ; No point trying to print an error message if the write call fails lol
+    js short exit
 
     xor eax, eax ; sys_read
 
     sub r13, rdx
     jnz short read_loop
 
-    xor edi, edi ; Set exit code to 0
 
 exit:
-    mov eax, 60 ; sys_exit
-    syscall
-
-exit_print_error:
     xchg ebx, eax ; save error code
     mov eax, 1 ; sys_write
     mov edi, 2 ; stderr
     mov dx, 16 ; length of string
     mov esi, esp ; error string pointer
+    jns short no_print ; Don't print an error message if there were no errors
     syscall
+
+no_print:
+    ; The exit code will always be nonzero even if there are no errors
     mov edi, ebx ; set error code
-    jmp short exit
+    mov al, 60 ; sys_exit
+    syscall
 
     ; Some strings
     estr: db `SYSCALL x error\n`
