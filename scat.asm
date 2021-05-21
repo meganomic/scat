@@ -58,7 +58,7 @@ perr:
                 ;dq 0 ; p_paddr;                       /* Segment physical address */
                 dq end_of_code-$$ ; p_filesz          /* Segment size in file */
                 dq end_of_bss-$$ ; p_memsz               /* Segment size in memory */
-                dq 4096 ; p_align                     /* Segment alignment, file & memory */
+                ;dq 4096 ; p_align                     /* Segment alignment, file & memory */
 
 
 openfile_continue:
