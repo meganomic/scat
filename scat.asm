@@ -46,7 +46,7 @@ phdr:
                 dq $$ ; p_vaddr;                      /* Segment virtual address */
 perr:
     ; Load the 'usage' error message pointer
-    mov esp, str1 ; 5 bytes
+    push str1 ; 5 bytes
     jmp short exit ; 2 bytes
 
                 db 0 ; filler byte
@@ -58,7 +58,8 @@ perr:
 
 openfile_continue:
     ; Put address to error string in rsp
-    mov esp, estr
+    ;mov esp, estr
+    push estr
 
     mov cl, 50 ; Set syscall number for error string
 
@@ -115,7 +116,7 @@ exit:
     mov eax, 1 ; sys_write
     mov edi, 2 ; stderr
     mov dx, 16 ; length of string
-    mov esi, esp ; error string pointer
+    pop rsi ; error string pointer
     mov [rsi+8], cl
     jns short no_print ; Don't print an error message if there were no errors
     syscall
