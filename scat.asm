@@ -46,9 +46,10 @@ phdr:
                 dq $$ ; p_vaddr;                      /* Segment virtual address */
 perr:
     ; Load the 'usage' error message pointer
-    lea esp, str1 ; 6 bytes
+    mov esp, str1 ; 5 bytes
     jmp short exit_print_error ; 2 bytes
 
+                db 0 ; filler byte
                 ;dq 0 ; p_paddr;                       /* Segment physical address */
                 dq end_of_code-$$ ; p_filesz          /* Segment size in file */
                 dq end_of_bss-$$ ; p_memsz               /* Segment size in memory */
@@ -57,7 +58,7 @@ perr:
 
 openfile_continue:
     ; Put address to error string in rsp
-    lea esp, estr
+    mov esp, estr
 
     mov [rsp+8], byte 50 ; Set syscall number in error string
 
@@ -70,7 +71,7 @@ fstat:
     mov [rsp+8], byte 53 ; Set syscall number in error string
 
     ; Fstat call to get file size
-    lea esi, buffer
+    mov esi, buffer
     mov al, 5 ; sys_fstat
     mov edi, ebx ; fd - This is safe because it resets upper bits
     syscall
