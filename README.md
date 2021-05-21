@@ -1,5 +1,5 @@
 # Small Cat (scat)
-A small (247 bytes) `cat` program written in assembly for my amusement.
+A small (240 bytes) `cat` program written in assembly for my amusement.
 
 If you get an error message like this:  
 `SYSCALL nr error`  
