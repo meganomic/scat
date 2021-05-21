@@ -114,7 +114,7 @@ write:
 
 exit:
     xchg ebx, eax ; save error code
-    mov eax, 1 ; sys_write
+    mov al, 1 ; sys_write - Safe because rbx only has small numbers
     mov edi, 2 ; stderr
     mov dx, 16 ; length of string
     pop rsi ; error string pointer
