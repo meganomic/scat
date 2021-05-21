@@ -118,7 +118,7 @@ exit:
     mov edi, 2 ; stderr
     mov dx, 16 ; length of string
     pop rsi ; error string pointer
-    mov [rsi+8], cl
+    mov [rsi+8], cl ; Set syscall number in error string
     jns short no_print ; Don't print an error message if there were no errors
     syscall
 
