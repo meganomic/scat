@@ -60,7 +60,7 @@ openfile_continue:
     ; Put address to error string in rsp
     mov esp, estr
 
-    mov [rsp+8], byte 50 ; Set syscall number in error string
+    mov cl, 50 ; Set syscall number for error string
 
     js short exit
 
@@ -68,13 +68,13 @@ openfile_continue:
 fstat:
     xchg ebx, eax ; Save fd - fd won't be above 255. I'll eat my shoes if it is
 
-    mov [rsp+8], byte 53 ; Set syscall number in error string
-
     ; Fstat call to get file size
     mov esi, buffer
     mov al, 5 ; sys_fstat
     mov edi, ebx ; fd - This is safe because it resets upper bits
     syscall
+
+    mov cl, 53 ; Set syscall number for error string
 
     test eax, eax
     js short exit
@@ -87,7 +87,8 @@ read_loop:
     mov dil, bl ; fd - Again safe because rdi never stores a number higher than 255
     mov dx, 65535 ; count - Safe because this is the highest number ever stored in rdx
     syscall
-    mov [rsp+8], byte 48 ; Set syscall number in error string
+
+    mov cl, 48 ; Set syscall number for error string
 
     test eax, eax
     js short exit
@@ -115,6 +116,7 @@ exit:
     mov edi, 2 ; stderr
     mov dx, 16 ; length of string
     mov esi, esp ; error string pointer
+    mov [rsp+8], cl
     jns short no_print ; Don't print an error message if there were no errors
     syscall
 
