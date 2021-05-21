@@ -4,17 +4,18 @@ default rel
 
 ; ELF64 Header
 ehdr:
-                db 0x7F, "ELF", 2, 1, 1;, 0 ; e_ident[16]
+                db 0x7F, "ELF", 2, 1, 1, 0 ; e_ident[16]
                 ;dq 0 ;
 _start:
     ; This is where the program starts
     ; Compare Argc against 2, the first argv is the path to the binary
     ; So 2 means the program was given 1 argument
-    mov eax, [rsp] ; 3 bytes
+    pop rax
     cmp al, 2 ; 2 bytes
     je short openfile ; 2 bytes
     jmp short perr ; 2 bytes
 
+                db 0 ; filler byte
                 dw 2 ; e_type
                 dw 62 ; e_machine
                 dd 1 ; e_version
@@ -23,15 +24,19 @@ _start:
 openfile:
     ; Load the pointer to the 1st 'real' argument aka the filepath into rdi and open it
     ; rax is already 2 here which is sys_open
-    mov rdi, [rsp+16] ; 5 bytes
+    pop rdi ; 1 byte
+    pop rdi ; 1 byte - pointer to the path to the file to open
     syscall ; 2 bytes
     test eax, eax ; 2 bytes
+    push estr
     jmp short openfile_continue ; 2 bytes
 
-                db 0 ; filler byte
+                db 0 ; filler byter
+                ;dd 0
                 ;dq 0 ; e_shoff          /* Section header table file offset */
                 ;dd 0 ; e_flags
-                dw 64 ; e_ehsize
+                ;db 0
+                ;dw 64 ; e_ehsize
                 dw 56 ; e_phentsize;
                 ;dw 1 ; e_phnum;
                 ;dw 0 ; e_shentsize;
@@ -59,7 +64,7 @@ perr:
 openfile_continue:
     ; Put address to error string in rsp
     ;mov esp, estr
-    push estr
+    ;push estr
 
     mov cl, 50 ; Set syscall number for error string
 
