@@ -1,9 +1,12 @@
 # Small Cat (scat)
 A small (160 bytes) `cat` program written in assembly for my amusement.
 
-If you get an error message like this:  
-`SYSCALL nr error`  
-You can check the exit code to see what the error was
+The exit code will reveal any issues.  
+0: Everything is good  
+1: Write error  
+2: Couldn't open the file or no file provided  
+3: Read error  
+4: Couldn't get filesize
 
 ### Build instructions
 nasm -f bin scat.asm  
