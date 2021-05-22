@@ -11,11 +11,11 @@ _start:
     ; Compare Argc against 2, the first argv is the path to the binary
     ; So 2 means the program was given 1 argument
     pop rax ; 1 byte
+    pop rdi ; 1 byte
     cmp al, 2 ; 2 bytes
     je short openfile ; 2 bytes
     jmp short perr ; 2 bytes
 
-                db 0 ; filler byte
                 dw 2 ; e_type
                 dw 62 ; e_machine
                 dd 1 ; e_version
@@ -24,18 +24,17 @@ _start:
 openfile:
     ; Load the pointer to the 1st 'real' argument aka the filepath into rdi and open it
     ; rax is already 2 here which is sys_open
-    pop rdi ; 1 byte
     pop rdi ; 1 byte - pointer to the path to the file to open
     syscall ; 2 bytes
     test eax, eax ; 2 bytes
-    push estr ; 5 bytes - Put address to error string on stack
-    jmp short openfile_continue ; 2 bytes
+perr:
+    mov edi, 2 ; 5 bytes
+    js short exit ; 2 bytes
+    jmp short fstathdr ; 2 bytes
 
-                db 0 ; filler byte
-                ;dd 0
+                ;db 0 ; filler byte
                 ;dq 0 ; e_shoff          /* Section header table file offset */
                 ;dd 0 ; e_flags
-                ;db 0
                 ;dw 64 ; e_ehsize
                 dw 56 ; e_phentsize;
                 ;dw 1 ; e_phnum;
@@ -49,34 +48,24 @@ phdr:
                 dd 7 ; p_flags;
                 dq 0 ; p_offset;                      /* Segment file offset */
                 dq $$ ; p_vaddr;                      /* Segment virtual address */
-perr:
-    ; Put 'usage' error message pointer on stack
-    push str1 ; 5 bytes
-    jmp short exit ; 2 bytes
+fstathdr:
+    xchg ebx, eax ; 1 byte - Save FD to ebx and set eax to zero. ebx is zero here
+    mov esi, buffer ; 5 bytes - pointer to the buffer
+    jmp short fstat ; 2 bytes
 
-                db 0 ; filler byte
                 ;dq 0 ; p_paddr;                       /* Segment physical address */
                 dq end_of_code-$$ ; p_filesz          /* Segment size in file */
                 dq end_of_bss-$$ ; p_memsz               /* Segment size in memory */
                 ;dq 4096 ; p_align                     /* Segment alignment, file & memory */
 
 
-openfile_continue:
-    mov cl, 50 ; Set syscall number for error string
-
-    js short exit
-
-
 fstat:
-    xchg ebx, eax ; Save fd - fd won't be above 255. I'll eat my shoes if it is
-
     ; Fstat call to get file size
-    mov esi, buffer
-    mov al, 5 ; sys_fstat
-    mov edi, ebx ; fd - This is safe because it resets upper bits
+    mov al, 5 ; sys_fstat - This is safe because rax == 0
+    mov edi, ebx ; fd
     syscall
 
-    mov cl, 53 ; Set syscall number for error string
+    mov dil, 5 ; Set exit code - This is safe because rdi == 3
 
     test eax, eax
     js short exit
@@ -86,11 +75,9 @@ fstat:
 
 read_loop:
     ; rax is already zero here which is sys_read
-    mov dil, bl ; fd - Again safe because rdi never stores a number higher than 255
-    mov dx, 65535 ; count - Safe because this is the highest number ever stored in rdx
+    mov edi, ebx ; fd
+    mov dx, 65535 ; count
     syscall
-
-    mov cl, 48 ; Set syscall number for error string
 
     test eax, eax
     js short exit
@@ -98,39 +85,25 @@ read_loop:
 
 write:
     ; write syscall
-    xchg edx, eax ; amount of bytes read - Safe because rdx contains a number equal or lower than 65535
-    mov ax, 1 ; sys_write - Safe because rax contains a number equal or lower than 65535
-    mov dil, 1 ; stdout - Safe because only small number in rdi
+    xchg edx, eax ; amount of bytes read
+    mov ax, 1 ; sys_write
+    mov dil, 1 ; stdout
     syscall
 
-    test eax, eax
-    js short exit
-
-    xor eax, eax ; sys_read
+    ; If there was a error or a short write, exit
+    sub eax, edx
+    jnz exit
 
     sub r13, rdx
     jnz short read_loop
 
+    xor edi, edi ; Set exit code to 0
+
 
 exit:
-    xchg ebx, eax ; save error code
-    mov al, 1 ; sys_write - Safe because rbx only has small numbers
-    mov edi, 2 ; stderr
-    mov dx, 16 ; length of string
-    pop rsi ; error string pointer
-    mov [rsi+8], cl ; Set syscall number in error string
-    jns short no_print ; Don't print an error message if there were no errors
-    syscall
-
-no_print:
-    ; The exit code will always be nonzero even if there are no errors
-    mov edi, ebx ; set error code
+    xor eax, eax
     mov al, 60 ; sys_exit
     syscall
-
-    ; Some strings
-    estr: db `SYSCALL x error\n`
-    str1: db `scat [filename]\n`
 
 end_of_code:
 
