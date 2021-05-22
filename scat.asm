@@ -65,7 +65,7 @@ fstat:
     mov edi, ebx ; fd
     syscall
 
-    mov dil, 5 ; Set exit code - This is safe because rdi == 3
+    mov dil, 4 ; Set exit code - This is safe because rdi == 3
 
     test eax, eax
     js short exit
