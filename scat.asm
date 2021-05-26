@@ -1,6 +1,6 @@
 BITS 64
 default rel
-    org 0x08048000 ; default virtual address
+    org 0x400000 ; default virtual address for x86-64
 
 ; ELF64 Header
 ehdr:
