@@ -63,7 +63,6 @@ fstathdr:
 
 fstat:
     ; Fstat call to get file size
-    ;mov al, 5 ; sys_fstat - This is safe because rax == 0
     mov edi, ebx ; fd
     syscall
 
