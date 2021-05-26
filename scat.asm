@@ -27,8 +27,10 @@ openfile:
     pop rdi ; 1 byte - pointer to the path to the file to open
     syscall ; 2 bytes
     test eax, eax ; 2 bytes
+    mov bl, 5 ; 2 bytes - This is put in rax later for the fstat call
 perr:
-    mov edi, 2 ; 5 bytes
+    push byte 2 ; 2 bytes
+    pop rdi ; 1 byte
     js short exit ; 2 bytes
     jmp short fstathdr ; 2 bytes
 
@@ -61,7 +63,7 @@ fstathdr:
 
 fstat:
     ; Fstat call to get file size
-    mov al, 5 ; sys_fstat - This is safe because rax == 0
+    ;mov al, 5 ; sys_fstat - This is safe because rax == 0
     mov edi, ebx ; fd
     syscall
 
@@ -86,13 +88,14 @@ read_loop:
 write:
     ; write syscall
     xchg edx, eax ; amount of bytes read
-    mov ax, 1 ; sys_write
+    push byte 1 ; sys_write
+    pop rax
     mov dil, 1 ; stdout
     syscall
 
     ; If there was a error or a short write, exit
     sub eax, edx
-    jnz exit
+    jnz short exit
 
     sub r13, rdx
     jnz short read_loop
@@ -101,8 +104,8 @@ write:
 
 
 exit:
-    xor eax, eax
-    mov al, 60 ; sys_exit
+    push byte 60 ; sys_exit
+    pop rax
     syscall
 
 end_of_code:
