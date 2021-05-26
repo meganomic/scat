@@ -1,5 +1,5 @@
 # Small Cat (scat)
-A small (159 bytes) `cat` program written in assembly for my amusement.
+A small (155 bytes) `cat` program written in assembly for my amusement.
 
 The exit code will reveal any issues.  
 0: Everything is good  
