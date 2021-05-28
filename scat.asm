@@ -11,13 +11,13 @@ _start:
     ; This is where the program starts
     ; Compare Argc against 2, the first argv is the path to the binary
     ; So 2 means the program was given 1 argument
-    pop rax ; 1 byte
+    pop rax ; 1 byte - Argc
     cmp al, 2 ; 2 bytes
     jne short continue ; 2 bytes
     pop rdi ; 1 byte
-    pop rdi ; 1 byte
+    pop rdi ; 1 byte - Filename pointer
     syscall ; 2 bytes
-    xchg eax, ebx
+    xchg eax, ebx ; 1 byte - Set RAX to zero and save FD to RBX
     jmp short openfile1 ; 2 bytes
 
                 dw 2 ; e_type
@@ -52,9 +52,6 @@ read:
 phdr:
                 dd 1 ; p_type;
                 dd 7 ; p_flags;
-
-
-
                 dq 0 ; p_offset;                      /* Segment file offset */
                 dq $$ ; p_vaddr;                      /* Segment virtual address */
 read2:
@@ -69,9 +66,7 @@ read2:
                 ;dq 4096 ; p_align                     /* Segment alignment, file & memory */
 
 
-
 loop:
-
     ; write syscall
     xchg edx, eax ; amount of bytes read
     push byte 1 ; sys_write
