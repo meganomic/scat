@@ -35,9 +35,9 @@ continue:
     pop rdi ; 1 byte
     js short exit ; 2 bytes
     mov esi, buffer ; 5 bytes
-read:
-    mov edi, ebx ; fd
-    jmp short read2 ; 2 bytes
+write:
+    push byte 1 ; sys_write
+    jmp short write2 ; 2 bytes
 
                 ;dq 0 ; e_shoff          /* Section header table file offset */
                 ;dd 0 ; e_flags
@@ -51,14 +51,19 @@ read:
 
 phdr:
                 dd 1 ; p_type;
-                dd 7 ; p_flags;
+write2:
+    ; I can put this here because 'pop rdi' is 0x5F which sets the correct permissions
+    pop rdi ; 1 byte
+    xchg edx, eax ; 1 byte
+    jmp short write3 ; 2 bytes
+                ;dd 7 ; p_flags;
                 dq 0 ; p_offset;                      /* Segment file offset */
                 dq $$ ; p_vaddr;                      /* Segment virtual address */
-read2:
-    mov edx, ecx ; count - RCX contains the return address of the last system call. Aka 0x04000xx
+write3:
+    mov eax, edi ; stdout
     syscall
-    test eax, eax
-    jmp short read_continue
+    sub eax, edx
+    jmp short write4
 
                 ;dq 0 ; p_paddr;                       /* Segment physical address */
                 dq end_of_code-$$ ; p_filesz          /* Segment size in file */
@@ -66,25 +71,19 @@ read2:
                 ;dq 4096 ; p_align                     /* Segment alignment, file & memory */
 
 
-loop:
-    ; write syscall
-    xchg edx, eax ; amount of bytes read
-    push byte 1 ; sys_write
-    pop rax
-    mov dil, 1 ; stdout
-    syscall
-
+write4:
     ; If there was a error or a short write, exit
-    sub eax, edx
+
     jnz short exit
 
-    jmp short read
 
-
-read_continue:
-
+read:
+    mov edi, ebx ; fd
+    mov edx, ecx ; count - RCX contains the return address of the last system call. Aka 0x04000xx
+    syscall
+    test eax, eax
     js short exit
-    jnz short loop
+    jnz short write
 
 
     pop rdi ; Set RDI to zero. There's one on the stack, use that
