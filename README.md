@@ -6,7 +6,6 @@ The exit code will reveal any issues.
 1: Write error  
 2: Couldn't open the file or no file provided  
 3: Read error  
-4: Couldn't get filesize
 
 ### Build instructions
 nasm -f bin scat.asm  
