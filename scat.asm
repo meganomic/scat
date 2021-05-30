@@ -7,37 +7,33 @@ ehdr:
                 db 0x7F, "ELF";, 2, 1, 1, 0 ; e_ident[16]
                 ;dq 0 ;
 
-_start:
-    ; This is where the program starts
-    ; Compare Argc against 2, the first argv is the path to the binary
-    ; So 2 means the program was given 1 argument
-    pop rax ; 1 byte - Argc
-    cmp al, 2 ; 2 bytes
-    jne short continue ; 2 bytes
-    pop rdi ; 1 byte
-    pop rdi ; 1 byte - Filename pointer
+_start2:
+    mov al, 2 ; 2 bytes
+    pop rdi ; 1 byte - Filename pointer or Zero
     syscall ; 2 bytes
     xchg eax, ebx ; 1 byte - Set RAX to zero and save FD to RBX
+    test ebx, ebx ; 2 bytes
+    mov al, 1 ; 2 bytes - This is setting up for the read/write loop
     jmp short openfile1 ; 2 bytes
 
                 dw 2 ; e_type
                 dw 62 ; e_machine
 
 openfile1:
-    test ebx, ebx ; 2 bytes
+    js short exit ; 2 bytes
     jmp short continue ; 2 bytes
                 ;dd 1 ; e_version
                 dq _start; e_entry      /* Entry point virtual address */
                 dq phdr - $$; e_phoff   /* Program header table file offset */
 
 continue:
-    push byte 2 ; 2 bytes
-    pop rdi ; 1 byte
-    js short exit ; 2 bytes
     mov esi, buffer ; 5 bytes
-write:
-    push byte 1 ; sys_write
-    jmp short write2 ; 2 bytes
+    mov edx, ecx ; 2 bytes - This is setting up for the read/write loop
+    mov edi, eax ; 2 bytes - This is setting up for the read/write loop
+loop:
+    xchg eax, ebp ; 1 byte
+    xchg edi, ebx ; 2 bytes
+    jmp short loop2 ; 2 bytes
 
                 ;dq 0 ; e_shoff          /* Section header table file offset */
                 ;dd 0 ; e_flags
@@ -51,19 +47,20 @@ write:
 
 phdr:
                 dd 1 ; p_type;
-write2:
+_start:
     ; I can put this here because 'pop rdi' is 0x5F which sets the correct permissions
     pop rdi ; 1 byte
-    xchg edx, eax ; 1 byte
-    jmp short write3 ; 2 bytes
+    pop rdi ; 1 byte
+    jmp short _start2 ; 2 bytes
                 ;dd 7 ; p_flags;
                 dq 0 ; p_offset;                      /* Segment file offset */
                 dq $$ ; p_vaddr;                      /* Segment virtual address */
-write3:
-    mov eax, edi ; stdout
-    syscall
-    sub eax, edx
-    jmp short write4
+loop2:
+    push rax ; 1 byte
+    syscall ; 2 bytes
+    test eax, eax ; 2 bytes
+    pop rax ; 1 byte
+    jmp short loop3 ; 2 bytes
 
                 ;dq 0 ; p_paddr;                       /* Segment physical address */
                 dq end_of_code-$$ ; p_filesz          /* Segment size in file */
@@ -71,28 +68,21 @@ write3:
                 ;dq 4096 ; p_align                     /* Segment alignment, file & memory */
 
 
-write4:
-    ; If there was a error or a short write, exit
+loop3:
 
-    jnz short exit
-
-
-read:
-    mov edi, ebx ; fd
-    mov edx, ecx ; count - RCX contains the return address of the last system call. Aka 0x04000xx
-    syscall
-    test eax, eax
-    js short exit
-    jnz short write
-
-
-    pop rdi ; Set RDI to zero. There's one on the stack, use that
+    jg loop
 
 
 exit:
     push byte 60 ; sys_exit
     pop rax
     syscall
+
+    ;xchg eax, ecx
+    ;add al, 103
+    ;xchg eax, esi
+
+db 0 ; Binary doens't start if it's too small?? 112 bytes seem to be the limit?
 
 end_of_code:
 
