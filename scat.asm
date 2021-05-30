@@ -59,7 +59,7 @@ loop2:
     push rax ; 1 byte
     syscall ; 2 bytes
     test eax, eax ; 2 bytes
-    pop rax ; 1 byte
+    xchg eax, edx
     jmp short loop3 ; 2 bytes
 
                 ;dq 0 ; p_paddr;                       /* Segment physical address */
@@ -69,7 +69,7 @@ loop2:
 
 
 loop3:
-
+    pop rax ; 1 byte
     jg loop
 
 
@@ -77,12 +77,6 @@ exit:
     push byte 60 ; sys_exit
     pop rax
     syscall
-
-    ;xchg eax, ecx
-    ;add al, 103
-    ;xchg eax, esi
-
-db 0 ; Binary doens't start if it's too small?? 112 bytes seem to be the limit?
 
 end_of_code:
 
