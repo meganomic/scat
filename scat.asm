@@ -8,12 +8,12 @@ ehdr:
                 ;dq 0 ;
 
 _start2:
-    mov al, 2 ; 2 bytes
-    pop rdi ; 1 byte - Filename pointer or Zero
-    syscall ; 2 bytes
+    mov al, 2 ; 2 bytes - sys_open
+    pop rdi ; 1 byte - Pointer to 1st argument or zero
+    syscall ; 2 bytes - sys_open
     xchg eax, ebx ; 1 byte - Set RAX to zero and save FD to RBX
     test ebx, ebx ; 2 bytes
-    mov al, 1 ; 2 bytes - This is setting up for the read/write loop
+    mov al, 1 ; 2 bytes - sys_write
     jmp short openfile1 ; 2 bytes
 
                 dw 2 ; e_type
@@ -27,13 +27,16 @@ openfile1:
                 dq phdr - $$; e_phoff   /* Program header table file offset */
 
 continue:
-    mov esi, buffer ; 5 bytes
-    mov edx, ecx ; 2 bytes - This is setting up for the read/write loop
-    mov edi, eax ; 2 bytes - This is setting up for the read/write loop
+    lea esi, [rcx+103] ; 3 bytes - Buffer address
+    mov edx, ecx ; 2 bytes - ECX contains the return address of the last syscall. We will use that as the read count.
+    mov edi, eax ; 2 bytes - Set EDI to 1 for STDOUT
 loop:
-    xchg eax, ebp ; 1 byte
-    xchg edi, ebx ; 2 bytes
+    ; This loop alternates between sys_read and sys_write
+    xchg eax, ebp ; 1 byte - Switch EAX between 1 and 0 every loop - sys_read <-> sys_write
+    xchg edi, ebx ; 2 bytes - Switch EDI between 1 and 3 every loop - Our open file <-> STDOUT
+    push rax ; 1 byte - Save RAX since it will be overwritten by the system call
     jmp short loop2 ; 2 bytes
+    db 0
 
                 ;dq 0 ; e_shoff          /* Section header table file offset */
                 ;dd 0 ; e_flags
@@ -50,16 +53,16 @@ phdr:
 _start:
     ; I can put this here because 'pop rdi' is 0x5F which sets the correct permissions
     pop rdi ; 1 byte
-    pop rdi ; 1 byte
+    pop rdi ; 1 byte - This is the first argument
     jmp short _start2 ; 2 bytes
                 ;dd 7 ; p_flags;
                 dq 0 ; p_offset;                      /* Segment file offset */
                 dq $$ ; p_vaddr;                      /* Segment virtual address */
 loop2:
-    push rax ; 1 byte
-    syscall ; 2 bytes
+    syscall ; 2 bytes - sys_read and sys_write
     test eax, eax ; 2 bytes
-    xchg eax, edx
+    xchg eax, edx ; 1 byte - Set EDX to how many bytes were Read or Written
+    pop rax ; 1 byte - Restore RAX
     jmp short loop3 ; 2 bytes
 
                 ;dq 0 ; p_paddr;                       /* Segment physical address */
@@ -69,14 +72,15 @@ loop2:
 
 
 loop3:
-    pop rax ; 1 byte
-    jg loop
+    jg loop ; Loop until there's an error OR syscall returned 0
 
 
 exit:
     push byte 60 ; sys_exit
     pop rax
     syscall
+
+    db 0 ; The Program Header needs 8 bytes at the end.
 
 end_of_code:
 
